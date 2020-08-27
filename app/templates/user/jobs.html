@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block head_scripts %}
+{% endblock %}
+
+{% block navbar %}
+    {% include "partials/navbar.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="content p-10">
+        <div class="container">
+            <div class="card">
+                <h1 class="text-3xl font-semibold">
+                    My jobs
+                </h1>
+                <h3 class="text-gray-600">
+                    List of all jobs created 
+                </h3>
+                <div class="w-full" style="overflow-x:scroll;">
+                    <table class="w-full text-left" id="mydata">
+                        <thead class="">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Duration (seconds)</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                                <tr onclick="window.location='/jobs/status/{{job.scheduler_id}}'">
+                                    <td>
+                                        {{job.id}}
+                                    </td>
+                                    <td>
+                                        {{job.name}}
+                                    </td>
+                                    <td>
+                                        {% if job.status.value == 100 %}
+                                            <div class="rounded-full bg-gray-300 text-black px-2 py-0 inline-block text-sm">
+                                                Pending
+                                            </div>
+                                        {% elif job.status.value == 200 %}
+                                            <div class="rounded-full bg-gray-300 text-black px-2 py-0 inline-block text-sm">
+                                                In progress
+                                            </div>
+                                        {% elif job.status.value == 300 %}
+                                            <div class="rounded-full bg-green-600 text-white px-2 py-0 inline-block text-sm">
+                                                Succeeded
+                                            </div>
+                                        {% elif job.status.value == 400 %}
+                                            <div class="rounded-full bg-red-600 text-white px-2 py-0 inline-block text-sm">
+                                                Failed
+                                            </div>
+                                        {% endif %}
+                                        <!-- {{job.status}} -->
+                                    </td>
+                                    <td>
+                                        {{ "%.3f" | format(job.duration) }}
+                                    </td>
+                                    <td>
+                                        {{ job.result }}
+                                        <div class="actions float-right">
+                                            <a href="/jobs/status/{{job.scheduler_id}}" class="btn-action btn-action-green">View</a>
+                                            <a href="/jobs/status/{{job.scheduler_id}}" class="btn-action btn-action-blue">Edit</a>
+                                            <a href="/jobs/status/{{job.scheduler_id}}" class="btn-action btn-action-red">Delete</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+    
+                </div>
+                <div class="flex justify-between flex-wrap">
+                    <div class="py-3 pagination inline-flex">
+                        <a href="{{ prev_url }}" class="prev"></a>
+                        <a href="{{ first_url }}" class="{% if page == 1%}active{% endif %}">1</a>
+                        {% for button in button_list %}
+                        <a href="{{ button.url }}" class="{% if page == button.number%}active{% endif %}">{{ button.number }}</a>
+                        {% endfor %}
+                        <a href="{{ last_url }}" class="{% if page == total_pages%}active{% endif %}">{{ total_pages }}</a>
+                        <a href="{{ next_url }}" class="next"></a>
+
+                    </div>
+                    <div class="py-3 items-center">
+                        <label class="inline-block normal-case text-base font-normal mr-3" for="entries_per_page">Entries</label>
+                        <div class="inline-block relative">
+                            <select onchange="onSelect(this)" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="entries_per_page">
+                                <option {% if entries == 10 %}selected{% endif %} value="10">10</option>
+                                <option {% if entries == 20 %}selected{% endif %} value="20">20</option>
+                                <option {% if entries == 50 %}selected{% endif %} value="50">50</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/public/js/table.js"></script>
+<script>
+    const table = new ML.SortTable("mydata");
+    const onSelect = (selectObject) => {
+        const value = selectObject.value;
+        let origin = window.location.origin;
+        let pathname = window.location.pathname;
+        let query = window.location.search;
+        let parts = query.substr(1).split("&");
+        let found = false;
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (part.includes("entries") || part == "") {
+                parts[i] = "entries=" + value;
+                found = true;
+            }
+        }
+        if (found === false) {
+            parts.push("entries=" + value);
+        }
+        query = "?" + parts.join("&");
+        window.location.replace(origin + pathname + query);
+        // window.location.replace("/account/jobs?entries_per_page=" + value)
+    }
+</script>
+{% endblock %}
